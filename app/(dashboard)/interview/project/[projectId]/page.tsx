@@ -1,21 +1,19 @@
 import { notFound, redirect } from "next/navigation";
-import { InterviewRoom } from "@/components/interview/interview-room";
 import { requireAuth, getUserResume } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
 import { projects } from "@/lib/db/schema";
+import { InterviewPrep } from "@/components/interview/interview-prep";
+import { getProjectInterviewMeta } from "@/lib/voice/interview-meta";
 
-export default async function VoiceProjectPage({
+export default async function InterviewProjectPrepPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ lang?: string; style?: string }>;
 }) {
   const session = await requireAuth();
   const resume = await getUserResume(session.user.id);
   const { projectId } = await params;
-  const { lang, style } = await searchParams;
 
   if (!resume) redirect("/onboarding/upload");
 
@@ -27,13 +25,16 @@ export default async function VoiceProjectPage({
 
   if (!project) notFound();
 
+  const meta = getProjectInterviewMeta(project.title);
+
   return (
-    <InterviewRoom
+    <InterviewPrep
       interviewType="project"
       targetId={project.id}
       targetTitle={project.title}
-      interviewLanguage={lang ?? "en"}
-      interviewerStyle={style ?? "balanced"}
+      categoryLabel="Project deep-dive"
+      description={project.enrichedDescription}
+      meta={meta}
     />
   );
 }

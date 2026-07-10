@@ -23,7 +23,7 @@ const features = [
   {
     icon: Mic,
     title: "Live voice practice",
-    desc: "Speak naturally with a 3D AI interviewer powered by Vapi — no typing required.",
+    desc: "Speak naturally with a 3D AI interviewer in a live voice session — no typing required.",
   },
   {
     icon: Brain,
@@ -47,14 +47,14 @@ const steps = [
 const faqs = [
   {
     q: "Is this a real voice interview?",
-    a: "Yes. You speak out loud and the AI interviewer responds in real time via Vapi voice AI.",
+    a: "Yes. You speak out loud and the AI interviewer responds in real time with natural voice conversation.",
   },
   {
     q: "What file formats are supported?",
     a: "PDF and DOCX resumes are supported for upload and AI parsing.",
   },
   {
-    q: "Do I need to configure Vapi myself?",
+    q: "Do I need to configure anything for voice?",
     a: "No. The platform handles voice sessions — just sign in and start practicing.",
   },
 ];

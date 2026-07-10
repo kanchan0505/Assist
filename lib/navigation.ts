@@ -17,7 +17,7 @@ export type NavItem = {
 
 export const mainNav: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "AI Interview", href: "/interview", icon: Mic },
+  { title: "Interview Studio", href: "/interview", icon: Mic },
   { title: "Resume Profile", href: "/resume", icon: FileUser },
   { title: "Progress Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Interview History", href: "/history", icon: History },

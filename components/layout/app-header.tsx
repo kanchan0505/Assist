@@ -40,7 +40,7 @@ export function AppHeader({
       .toUpperCase() ?? "U";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-xl md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl md:px-6">
       <div className="flex items-center gap-3">
         {mobileMenu}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -14,8 +15,18 @@ type Props = {
 };
 
 export function AppShell({ children, title, description }: Props) {
+  const pathname = usePathname();
+  const isImmersiveInterview = pathname.startsWith("/voice/");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (isImmersiveInterview) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-hidden bg-[#0b1020] text-white">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -26,8 +26,8 @@ export default async function InterviewPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="AI Voice Interview"
-        description="Select a skill or project, configure your session, and start a live voice mock interview."
+        title="Interview Studio"
+        description="Explore topics from your resume, review preparation details, then enter a live AI voice interview."
       />
       <VoiceInterviewHub skills={resumeSkills} projects={resumeProjects} />
     </div>

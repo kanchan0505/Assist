@@ -7,13 +7,14 @@ import {
   INTERVIEWER_AVATAR,
   resolveAvatarPhase,
 } from "@/lib/voice/avatar-config";
+import { cn } from "@/lib/utils";
 
 const TalkingHeadAvatar = dynamic(
   () =>
     import("@/components/voice/talking-head-avatar").then((m) => m.TalkingHeadAvatar),
   {
     ssr: false,
-    loading: () => <InterviewerAvatarSkeleton />,
+    loading: () => <InterviewerAvatarSkeleton immersive />,
   },
 );
 
@@ -24,15 +25,28 @@ type Props = {
   volumeLevel: number;
   utteranceId: number;
   interviewLanguage: string;
+  immersive?: boolean;
 };
 
-function InterviewerAvatarSkeleton() {
+function InterviewerAvatarSkeleton({ immersive }: { immersive: boolean }) {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-gradient-to-b from-muted/50 to-background">
-      <div className="flex h-[min(52vh,420px)] items-center justify-center bg-[#1a1f2e]">
+    <div
+      className={cn(
+        "relative overflow-hidden",
+        immersive
+          ? "h-full w-full"
+          : "rounded-2xl border bg-gradient-to-b from-muted/50 to-background",
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-center bg-[#0b1020]",
+          immersive ? "h-full min-h-[50vh]" : "h-[min(52vh,420px)]",
+        )}
+      >
         <div className="flex flex-col items-center gap-3 text-sm text-white/80">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p>Loading 3D interviewer...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-sky-400" />
+          <p>Loading AI interviewer…</p>
         </div>
       </div>
     </div>
@@ -46,6 +60,7 @@ export function InterviewerAvatar({
   volumeLevel,
   utteranceId,
   interviewLanguage,
+  immersive = false,
 }: Props) {
   return (
     <TalkingHeadAvatar
@@ -55,6 +70,7 @@ export function InterviewerAvatar({
       volumeLevel={volumeLevel}
       utteranceId={utteranceId}
       interviewLanguage={interviewLanguage}
+      immersive={immersive}
     />
   );
 }

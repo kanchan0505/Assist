@@ -41,7 +41,7 @@ export default async function DashboardPage() {
       >
         <Link href="/interview" className={cn(buttonVariants())}>
           <Mic className="mr-2 size-4" />
-          Start interview
+          Open Interview Studio
         </Link>
       </PageHeader>
 

@@ -49,7 +49,7 @@ export function isFatalVapiError(error: unknown): boolean {
 
 export function formatVapiError(error: unknown): string {
   if (!error || typeof error !== "object") {
-    return "Vapi call error";
+    return "Voice connection error";
   }
 
   const record = error as Record<string, unknown>;
@@ -69,14 +69,14 @@ export function formatVapiError(error: unknown): string {
   if (typeof record.stage === "string") {
     const meta = record.metadata as Record<string, unknown> | undefined;
     if (meta && typeof meta.error === "string") {
-      return `Vapi ${record.stage}: ${meta.error}`;
+      return `Connection ${record.stage}: ${meta.error}`;
     }
-    return `Vapi ${record.stage} failed`;
+    return `Connection ${record.stage} failed`;
   }
 
   if (typeof record.type === "string") {
-    return `Vapi error (${record.type})`;
+    return `Voice error (${record.type})`;
   }
 
-  return "Vapi call error";
+  return "Voice connection error";
 }

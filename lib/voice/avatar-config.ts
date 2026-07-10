@@ -24,14 +24,14 @@ export function resolveAvatarPhase(
 export function getAvatarStatusLabel(phase: AvatarPhase): string {
   switch (phase) {
     case "connecting":
-      return "Connecting...";
+      return "AI is thinking…";
     case "speaking":
-      return "Speaking";
+      return "Speaking…";
     case "listening":
-      return "Listening to you";
+      return "Listening…";
     case "ended":
       return "Interview ended";
     default:
-      return "Ready to start";
+      return "Ready";
   }
 }

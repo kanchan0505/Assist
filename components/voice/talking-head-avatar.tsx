@@ -15,7 +15,6 @@ import {
   ensureTalkingHeadStream,
   type TalkingHeadInstance,
 } from "@/lib/voice/talking-head-client";
-import { resolveLipsyncLang } from "@/lib/voice/talking-head-sync";
 import {
   applyVolumeLipsync,
   buildWordTimedLipsync,
@@ -30,6 +29,7 @@ type Props = {
   volumeLevel: number;
   utteranceId: number;
   interviewLanguage: string;
+  immersive?: boolean;
 };
 
 const LISTENING_GESTURES = ["side", "ok", "index", "shrug"] as const;
@@ -54,6 +54,7 @@ export function TalkingHeadAvatar({
   volumeLevel,
   utteranceId,
   interviewLanguage,
+  immersive = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<TalkingHeadInstance | null>(null);
@@ -62,8 +63,6 @@ export function TalkingHeadAvatar({
   const speechStartedAtRef = useRef(0);
   const lastUtteranceIdRef = useRef(0);
   const syncTimeoutRef = useRef<number | null>(null);
-  const lipsyncLang = resolveLipsyncLang(interviewLanguage);
-
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -249,6 +248,87 @@ export function TalkingHeadAvatar({
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
 
+  if (immersive) {
+    return (
+      <div className="relative h-full w-full overflow-hidden">
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 transition-opacity duration-700",
+            phase === "speaking" && "opacity-100",
+            phase === "listening" && "opacity-70",
+            phase === "connecting" && "animate-pulse-glow opacity-80",
+            (phase === "idle" || phase === "ended") && "opacity-40",
+          )}
+        >
+          <div className="absolute inset-x-0 top-1/4 mx-auto size-[min(70vw,520px)] rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-1/3 w-2/3 bg-teal-400/5 blur-3xl" />
+        </div>
+
+        <div
+          ref={containerRef}
+          className={cn(
+            "absolute inset-0 h-full w-full bg-transparent",
+            loadState !== "ready" && "opacity-0",
+          )}
+          aria-label={`${INTERVIEWER_AVATAR.name} AI interviewer`}
+        />
+
+        {loadState === "loading" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-sm text-white/80">
+            <Loader2 className="h-8 w-8 animate-spin text-sky-400" />
+            <p>Loading AI interviewer…</p>
+          </div>
+        )}
+
+        {loadState === "error" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-white/80">
+            <p className="font-medium text-white">Could not load interviewer</p>
+            <p className="text-white/60">{loadError}</p>
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 px-4">
+          {(phase === "speaking" || phase === "listening" || phase === "connecting") &&
+            loadState === "ready" && (
+              <div
+                className={cn(
+                  "flex items-end gap-1 rounded-full px-4 py-2.5 backdrop-blur-md",
+                  phase === "speaking"
+                    ? "bg-sky-500/25"
+                    : phase === "listening"
+                      ? "bg-emerald-500/20"
+                      : "bg-amber-500/20",
+                )}
+              >
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "w-1 rounded-full",
+                      phase === "speaking"
+                        ? "animate-sound-bar bg-sky-300"
+                        : phase === "listening"
+                          ? "animate-sound-bar bg-emerald-300"
+                          : "h-2 bg-amber-300/80",
+                    )}
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  />
+                ))}
+              </div>
+            )}
+
+          <p className="text-center text-sm font-medium text-white/70">
+            {phase === "idle" && "Preparing your interview room…"}
+            {phase === "connecting" && "AI is thinking… connecting your session"}
+            {phase === "speaking" && `${INTERVIEWER_AVATAR.name} is speaking…`}
+            {phase === "listening" && "Listening… speak clearly into your microphone"}
+            {phase === "ended" && "Session complete"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-b from-muted/50 to-background">
       <div className="flex items-start justify-between gap-3 border-b bg-background/60 px-4 py-3 backdrop-blur-sm">
@@ -275,14 +355,14 @@ export function TalkingHeadAvatar({
 
         {loadState === "loading" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#1a1f2e] text-sm text-white/80">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p>Loading 3D interviewer...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-sky-400" />
+            <p>Loading AI interviewer…</p>
           </div>
         )}
 
         {loadState === "error" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#1a1f2e] px-6 text-center text-sm text-white/80">
-            <p className="font-medium text-white">Could not load 3D avatar</p>
+            <p className="font-medium text-white">Could not load interviewer</p>
             <p className="text-white/60">{loadError}</p>
           </div>
         )}
@@ -292,7 +372,7 @@ export function TalkingHeadAvatar({
             {[0, 1, 2, 3, 4].map((i) => (
               <span
                 key={i}
-                className="w-1 animate-sound-bar rounded-full bg-primary"
+                className="w-1 animate-sound-bar rounded-full bg-sky-400"
                 style={{ animationDelay: `${i * 0.12}s` }}
               />
             ))}
@@ -302,8 +382,8 @@ export function TalkingHeadAvatar({
 
       <p className="px-4 py-3 text-center text-sm text-muted-foreground">
         {phase === "idle" && "Press Start interview to connect with your AI interviewer."}
-        {phase === "connecting" && "Setting up your voice session..."}
-        {phase === "speaking" && "Watch Alex's lip-sync while you listen to the question."}
+        {phase === "connecting" && "Setting up your voice session…"}
+        {phase === "speaking" && `${INTERVIEWER_AVATAR.name} is speaking — listen carefully.`}
         {phase === "listening" && "Your turn — answer clearly into your microphone."}
         {phase === "ended" && "Session complete. Review your transcript and score below."}
       </p>
