@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Mic, PhoneOff, Volume2 } from "lucide-react";
+import { Loader2, Mic, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +23,7 @@ import {
   isFatalVapiError,
   isNonFatalVapiError,
 } from "@/lib/voice/vapi-errors";
+import { InterviewerAvatar } from "@/components/voice/interviewer-avatar";
 
 type Props = {
   interviewType: "skill" | "project";
@@ -56,6 +57,7 @@ export function VoiceInterviewPanel({
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "connecting" | "active" | "ended">("idle");
   const [speaking, setSpeaking] = useState(false);
+  const [assistantSpeechText, setAssistantSpeechText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [summary, setSummary] = useState<string | null>(null);
@@ -214,8 +216,13 @@ export function VoiceInterviewPanel({
         setStatus("ended");
       });
 
-      vapi.on("speech-start", () => setSpeaking(true));
-      vapi.on("speech-end", () => setSpeaking(false));
+      vapi.on("speech-start", () => {
+        setSpeaking(true);
+      });
+      vapi.on("speech-end", () => {
+        setSpeaking(false);
+        setAssistantSpeechText("");
+      });
 
       vapi.on("message", (message: VapiTranscriptMessage) => {
         if (message.type === "status-update" && message.status === "ended") {
@@ -229,12 +236,18 @@ export function VoiceInterviewPanel({
           }
         }
 
-        if (message.type !== "transcript" || message.transcriptType !== "final") {
+        if (message.type !== "transcript") {
           return;
         }
+
         const role = message.role === "user" ? "user" : "assistant";
         if (message.transcript) {
-          appendTranscript(role, message.transcript);
+          if (role === "assistant") {
+            setAssistantSpeechText(message.transcript);
+          }
+          if (message.transcriptType === "final") {
+            appendTranscript(role, message.transcript);
+          }
         }
       });
 
@@ -301,7 +314,7 @@ export function VoiceInterviewPanel({
     interviewType === "project" ? "Project interview" : "Technical skill interview";
 
   return (
-    <Card className="mx-auto max-w-3xl">
+    <Card className="mx-auto max-w-4xl">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -315,6 +328,13 @@ export function VoiceInterviewPanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
+        <InterviewerAvatar
+          status={status}
+          speaking={speaking}
+          speechText={assistantSpeechText}
+          interviewLanguage={interviewLanguage}
+        />
+
         {error && (
           <div
             className={`rounded-lg border p-3 text-sm ${
@@ -357,23 +377,6 @@ export function VoiceInterviewPanel({
             </>
           )}
         </div>
-
-        {status === "active" && (
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
-            </span>
-            <Mic className="h-4 w-4 text-green-600" />
-            Live — speak naturally. The AI interviewer will listen and respond.
-            {speaking && (
-              <span className="ml-auto flex items-center gap-1 text-muted-foreground">
-                <Volume2 className="h-4 w-4" />
-                Interviewer speaking
-              </span>
-            )}
-          </div>
-        )}
 
         {summarizing && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
