@@ -21,6 +21,8 @@ type Props = {
   status: "idle" | "connecting" | "active" | "ended";
   speaking: boolean;
   speechText: string;
+  volumeLevel: number;
+  utteranceId: number;
   interviewLanguage: string;
 };
 
@@ -41,6 +43,8 @@ export function InterviewerAvatar({
   status,
   speaking,
   speechText,
+  volumeLevel,
+  utteranceId,
   interviewLanguage,
 }: Props) {
   return (
@@ -48,6 +52,8 @@ export function InterviewerAvatar({
       status={status}
       speaking={speaking}
       speechText={speechText}
+      volumeLevel={volumeLevel}
+      utteranceId={utteranceId}
       interviewLanguage={interviewLanguage}
     />
   );

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ProjectEnrichForm } from "@/components/resume/project-enrich-form";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { requireAuth, getUserResume } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
@@ -9,27 +10,21 @@ export default async function EnrichPage() {
   const session = await requireAuth();
   const resume = await getUserResume(session.user.id);
 
-  if (!resume) {
-    redirect("/onboarding/upload");
-  }
+  if (!resume) redirect("/onboarding/upload");
 
   const resumeProjects = await db
     .select()
     .from(projects)
     .where(eq(projects.resumeId, resume.id));
 
-  if (resumeProjects.length === 0) {
-    redirect("/onboarding/review");
-  }
+  if (resumeProjects.length === 0) redirect("/onboarding/review");
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Enrich your projects</h1>
-        <p className="mt-2 text-muted-foreground">
-          Step 3 of 3 — Help the AI voice interviewer ask better project questions
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <PageHeader
+        title="Enrich your projects"
+        description="Step 3 of 3 — Add context so the AI asks sharper project questions."
+      />
       <ProjectEnrichForm projects={resumeProjects} />
     </div>
   );

@@ -4,13 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Mic, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type Vapi from "@vapi-ai/web";
 import type { VapiVariableValues } from "@/lib/vapi/vapi.sdk";
@@ -24,6 +17,7 @@ import {
   isNonFatalVapiError,
 } from "@/lib/voice/vapi-errors";
 import { InterviewerAvatar } from "@/components/voice/interviewer-avatar";
+import { InterviewStatusPill } from "@/components/interview/interview-room";
 
 type Props = {
   interviewType: "skill" | "project";
@@ -58,6 +52,8 @@ export function VoiceInterviewPanel({
   const [status, setStatus] = useState<"idle" | "connecting" | "active" | "ended">("idle");
   const [speaking, setSpeaking] = useState(false);
   const [assistantSpeechText, setAssistantSpeechText] = useState("");
+  const [volumeLevel, setVolumeLevel] = useState(0);
+  const [utteranceId, setUtteranceId] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [summary, setSummary] = useState<string | null>(null);
@@ -170,6 +166,9 @@ export function VoiceInterviewPanel({
     setScore(null);
     setSummarizing(false);
     userEndedRef.current = false;
+    setAssistantSpeechText("");
+    setVolumeLevel(0);
+    setUtteranceId(0);
 
     try {
       const res = await fetch("/api/voice/session", {
@@ -216,11 +215,17 @@ export function VoiceInterviewPanel({
         setStatus("ended");
       });
 
+      vapi.on("volume-level", (level: number) => {
+        setVolumeLevel(level);
+      });
+
       vapi.on("speech-start", () => {
         setSpeaking(true);
+        setUtteranceId((id) => id + 1);
       });
       vapi.on("speech-end", () => {
         setSpeaking(false);
+        setVolumeLevel(0);
         setAssistantSpeechText("");
       });
 
@@ -310,28 +315,34 @@ export function VoiceInterviewPanel({
     await summarizeSession(false);
   }
 
-  const interviewLabel =
-    interviewType === "project" ? "Project interview" : "Technical skill interview";
+  const statusPhase =
+    status === "active"
+      ? speaking
+        ? "active_speaking"
+        : "active_listening"
+      : status === "connecting"
+        ? "connecting"
+        : status === "ended"
+          ? "ended"
+          : "idle";
 
   return (
-    <Card className="mx-auto max-w-4xl">
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle>Voice Mock Interview</CardTitle>
-            <CardDescription className="mt-1">
-              {interviewLabel} — <strong>{targetTitle}</strong>
-            </CardDescription>
-          </div>
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/60 shadow-xl backdrop-blur-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{getLanguageLabel(interviewLanguage)}</Badge>
           <Badge variant="outline">{getStyleLabel(interviewerStyle)}</Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-5">
+        <InterviewStatusPill phase={statusPhase} />
+      </div>
+
+      <div className="space-y-5 p-5">
         <InterviewerAvatar
           status={status}
           speaking={speaking}
           speechText={assistantSpeechText}
+          volumeLevel={volumeLevel}
+          utteranceId={utteranceId}
           interviewLanguage={interviewLanguage}
         />
 
@@ -386,7 +397,9 @@ export function VoiceInterviewPanel({
         )}
 
         {transcript.length > 0 && (
-          <div className="max-h-80 space-y-3 overflow-y-auto rounded-lg border p-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Conversation transcript</p>
+            <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-border/60 bg-muted/20 p-4">
             {transcript.map((line, i) => (
               <div
                 key={i}
@@ -402,16 +415,19 @@ export function VoiceInterviewPanel({
                 <p>{line.text}</p>
               </div>
             ))}
+            </div>
           </div>
         )}
 
         {summary && (
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <p className="text-lg font-semibold">Score: {score}/10</p>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+            <p className="font-heading text-2xl font-bold">
+              Score: <span className="text-primary">{score}/10</span>
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">{summary}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

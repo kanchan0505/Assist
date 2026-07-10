@@ -1,6 +1,7 @@
 import type { TalkingHead } from "@met4citizen/talkinghead/modules/talkinghead.mjs";
 import { INTERVIEWER_AVATAR } from "@/lib/voice/avatar-config";
 import { resolveLipsyncLang } from "@/lib/voice/talking-head-sync";
+import { waitForLipsyncReady } from "@/lib/voice/lipsync-driver";
 
 const TALKING_HEAD_MODULE = "/talkinghead/modules/talkinghead.mjs";
 const WORKLET_PATH = "/talkinghead/playback-worklet.js";
@@ -45,7 +46,7 @@ export async function createTalkingHead(
   const lipsyncLang = resolveLipsyncLang(interviewLanguage);
 
   const head = new TalkingHead(container, {
-    lipsyncModules: ["en"],
+    lipsyncModules: [lipsyncLang, "en"],
     lipsyncLang,
     cameraView: "upper",
     cameraDistance: 0.15,
@@ -63,6 +64,7 @@ export async function createTalkingHead(
   patchWorkletLoader(head);
 
   try {
+    await waitForLipsyncReady(head, lipsyncLang);
     await head.showAvatar({
       url: INTERVIEWER_AVATAR.modelUrl,
       body: INTERVIEWER_AVATAR.body,
@@ -91,7 +93,7 @@ export async function ensureTalkingHeadStream(
   await head.streamStart({
     waitForAudioChunks: false,
     gain: 0,
-    lipsyncType: "visemes",
+    lipsyncType: "words",
     lipsyncLang,
     mood: "neutral",
   });

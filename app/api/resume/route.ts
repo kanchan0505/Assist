@@ -93,3 +93,22 @@ export async function PUT(request: Request) {
     );
   }
 }
+
+export async function DELETE() {
+  const authResult = await requireApiAuth();
+  if ("error" in authResult) return authResult.error;
+
+  const [resume] = await db
+    .select()
+    .from(resumes)
+    .where(eq(resumes.userId, authResult.session.user.id))
+    .limit(1);
+
+  if (!resume) {
+    return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+  }
+
+  await db.delete(resumes).where(eq(resumes.id, resume.id));
+
+  return NextResponse.json({ success: true });
+}

@@ -45,5 +45,6 @@ declare module "@met4citizen/talkinghead/modules/talkinghead.mjs" {
     lookAhead(ms: number): void;
     setMood(mood: string): void;
     stopSpeaking(): void;
+    setValue(mt: string, val: number, ms?: number | null): void;
   }
 }

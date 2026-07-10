@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-heading",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "ResumeInterview — AI Interview Prep",
+  title: "ResumeInterview — AI Voice Interview Platform",
   description:
-    "Upload your resume and practice live AI voice mock interviews tailored to your skills and projects.",
+    "Practice live AI voice mock interviews tailored to your resume. Upload, analyze, and improve with real-time feedback.",
 };
 
 export default function RootLayout({
@@ -37,19 +42,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full`}
     >
       <head>
-        {/* Required before TalkingHead loads — bare `three` imports won't resolve without this */}
         <script
           type="importmap"
           dangerouslySetInnerHTML={{ __html: talkingHeadImportMap }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full font-sans">
         <Providers>
           {children}
-          <Toaster />
+          <Toaster richColors position="top-right" />
         </Providers>
       </body>
     </html>

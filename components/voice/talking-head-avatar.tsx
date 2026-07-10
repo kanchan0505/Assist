@@ -10,18 +10,25 @@ import {
   resolveAvatarPhase,
   type AvatarPhase,
 } from "@/lib/voice/avatar-config";
-import { createTalkingHead, ensureTalkingHeadStream, type TalkingHeadInstance } from "@/lib/voice/talking-head-client";
 import {
-  estimateSpeechScale,
-  resolveLipsyncLang,
-  scaleVisemePayload,
-  textToVisemePayload,
-} from "@/lib/voice/talking-head-sync";
+  createTalkingHead,
+  ensureTalkingHeadStream,
+  type TalkingHeadInstance,
+} from "@/lib/voice/talking-head-client";
+import { resolveLipsyncLang } from "@/lib/voice/talking-head-sync";
+import {
+  applyVolumeLipsync,
+  buildWordTimedLipsync,
+  estimateUtteranceDurationMs,
+  resetMouth,
+} from "@/lib/voice/lipsync-driver";
 
 type Props = {
   status: "idle" | "connecting" | "active" | "ended";
   speaking: boolean;
   speechText: string;
+  volumeLevel: number;
+  utteranceId: number;
   interviewLanguage: string;
 };
 
@@ -44,12 +51,17 @@ export function TalkingHeadAvatar({
   status,
   speaking,
   speechText,
+  volumeLevel,
+  utteranceId,
   interviewLanguage,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<TalkingHeadInstance | null>(null);
   const streamReadyRef = useRef(false);
   const lastSyncedTextRef = useRef("");
+  const speechStartedAtRef = useRef(0);
+  const lastUtteranceIdRef = useRef(0);
+  const syncTimeoutRef = useRef<number | null>(null);
   const lipsyncLang = resolveLipsyncLang(interviewLanguage);
 
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
@@ -117,47 +129,96 @@ export function TalkingHeadAvatar({
   }, [status, loadState, interviewLanguage]);
 
   useEffect(() => {
-    const head = headRef.current;
-    if (!head || !streamReadyRef.current) return;
+    if (!speaking) return;
+    if (utteranceId === lastUtteranceIdRef.current) return;
 
-    if (!speaking) {
-      if (lastSyncedTextRef.current) {
-        head.streamInterrupt();
-        head.stopGesture(500);
-        head.lookAhead(400);
-        lastSyncedTextRef.current = "";
-      }
-      return;
-    }
+    lastUtteranceIdRef.current = utteranceId;
+    speechStartedAtRef.current = Date.now();
+    lastSyncedTextRef.current = "";
+  }, [speaking, utteranceId]);
+
+  useEffect(() => {
+    if (!speaking || !streamReadyRef.current) return;
+
+    const head = headRef.current;
+    if (!head) return;
+
+    let frame = 0;
+    const tick = () => {
+      const activeHead = headRef.current;
+      if (!activeHead) return;
+
+      const hasText = speechText.trim().length > 0;
+      const intensity = hasText ? 0.4 : 1;
+      applyVolumeLipsync(activeHead, volumeLevel, Date.now(), intensity);
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [speaking, volumeLevel, speechText]);
+
+  useEffect(() => {
+    const head = headRef.current;
+    if (!head || !streamReadyRef.current || !speaking) return;
 
     const trimmed = speechText.trim();
-    if (!trimmed || trimmed === lastSyncedTextRef.current) return;
+    if (!trimmed) return;
 
-    lastSyncedTextRef.current = trimmed;
+    if (syncTimeoutRef.current) {
+      window.clearTimeout(syncTimeoutRef.current);
+    }
+
+    syncTimeoutRef.current = window.setTimeout(() => {
+      const prev = lastSyncedTextRef.current;
+      if (trimmed === prev) return;
+      if (
+        prev &&
+        trimmed.startsWith(prev) &&
+        trimmed.length - prev.length < 6
+      ) {
+        return;
+      }
+
+      lastSyncedTextRef.current = trimmed;
+      const speakingFor = Date.now() - speechStartedAtRef.current;
+      const durationMs = estimateUtteranceDurationMs(trimmed, speakingFor);
+      const wordPayload = buildWordTimedLipsync(trimmed, durationMs);
+
+      if (wordPayload) {
+        head.streamAudio(wordPayload);
+        head.lookAtCamera(400);
+        head.setMood("neutral");
+
+        if (trimmed.includes("?")) {
+          head.playGesture("handup", 2.4, false, 700);
+        }
+      }
+    }, 200);
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        window.clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [speaking, speechText]);
+
+  useEffect(() => {
+    const head = headRef.current;
+    if (!head || speaking) return;
 
     head.streamInterrupt();
-    head.stopGesture(300);
-
-    const payload = textToVisemePayload(head, trimmed, lipsyncLang);
-    if (!payload) return;
-
-    const scale = estimateSpeechScale(trimmed, lipsyncLang);
-    head.streamAudio(scaleVisemePayload(payload, scale));
-    head.lookAtCamera(500);
-    head.setMood("neutral");
-
-    if (trimmed.includes("?")) {
-      head.playGesture("handup", 2.4, false, 700);
-    } else if (/great|good|excellent|nice|well done/i.test(trimmed)) {
-      head.playGesture("thumbup", 2, false, 600);
-    }
-  }, [speaking, speechText, lipsyncLang]);
+    head.stopGesture(400);
+    resetMouth(head);
+    lastSyncedTextRef.current = "";
+  }, [speaking]);
 
   useEffect(() => {
     const head = headRef.current;
     if (!head || status !== "ended") return;
     head.streamInterrupt();
     head.stopGesture(400);
+    resetMouth(head);
     lastSyncedTextRef.current = "";
   }, [status]);
 

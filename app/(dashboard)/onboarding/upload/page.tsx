@@ -1,14 +1,13 @@
 import { ResumeUploadForm } from "@/components/resume/resume-upload-form";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function UploadPage() {
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Upload your resume</h1>
-        <p className="mt-2 text-muted-foreground">
-          Step 1 of 3 — AI will extract your skills and projects
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-8">
+      <PageHeader
+        title="Upload your resume"
+        description="Step 1 of 3 — AI extracts skills and projects to power your interviews."
+      />
       <ResumeUploadForm />
     </div>
   );

@@ -1,9 +1,14 @@
 import { notFound, redirect } from "next/navigation";
-import { VoiceInterviewPanel } from "@/components/voice/voice-interview-panel";
+import Link from "next/link";
+import { InterviewRoom } from "@/components/interview/interview-room";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { requireAuth, getUserResume } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
 import { projects } from "@/lib/db/schema";
+import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default async function VoiceProjectPage({
   params,
@@ -17,9 +22,7 @@ export default async function VoiceProjectPage({
   const { projectId } = await params;
   const { lang, style } = await searchParams;
 
-  if (!resume) {
-    redirect("/onboarding/upload");
-  }
+  if (!resume) redirect("/onboarding/upload");
 
   const [project] = await db
     .select()
@@ -27,20 +30,20 @@ export default async function VoiceProjectPage({
     .where(and(eq(projects.id, projectId), eq(projects.resumeId, resume.id)))
     .limit(1);
 
-  if (!project) {
-    notFound();
-  }
+  if (!project) notFound();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Project Voice Interview</h1>
-        <p className="mt-2 text-muted-foreground">
-          Defend <strong>{project.title}</strong> with follow-up questions from a
-          live AI interviewer.
-        </p>
-      </div>
-      <VoiceInterviewPanel
+      <PageHeader
+        title="Interview Room"
+        description={`Project deep-dive — ${project.title}`}
+      >
+        <Link href="/interview" className={cn(buttonVariants({ variant: "outline" }))}>
+          <ArrowLeft className="mr-2 size-4" />
+          Back
+        </Link>
+      </PageHeader>
+      <InterviewRoom
         interviewType="project"
         targetId={project.id}
         targetTitle={project.title}

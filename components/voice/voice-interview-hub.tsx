@@ -57,7 +57,7 @@ export function VoiceInterviewHub({ skills, projects }: Props) {
 
   return (
     <div className="space-y-8">
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="border-border/60 bg-gradient-to-br from-primary/10 via-card/80 to-card/60 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mic className="h-5 w-5" />
@@ -115,11 +115,11 @@ export function VoiceInterviewHub({ skills, projects }: Props) {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Code2 className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold">Technical skills</h2>
+            <h2 className="font-heading text-xl font-semibold">Technical skills</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {skills.map((skill) => (
-              <Card key={skill.id} className="flex flex-col">
+              <Card key={skill.id} className="flex flex-col border-border/60 bg-card/60 transition hover:border-primary/30 hover:shadow-lg">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base">{skill.name}</CardTitle>
@@ -150,11 +150,11 @@ export function VoiceInterviewHub({ skills, projects }: Props) {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <FolderKanban className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold">Projects</h2>
+            <h2 className="font-heading text-xl font-semibold">Projects</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <Card key={project.id} className="flex flex-col">
+              <Card key={project.id} className="flex flex-col border-border/60 bg-card/60 transition hover:border-primary/30 hover:shadow-lg">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">{project.title}</CardTitle>
                   <CardDescription className="line-clamp-2">
