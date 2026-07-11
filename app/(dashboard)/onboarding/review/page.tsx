@@ -21,7 +21,7 @@ export default async function ReviewPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <PageHeader
         title="Review extracted data"
-        description="Step 2 of 3 — Edit skills and projects before your first interview."
+        description="Step 2 of 2 — Edit skills and projects, then start practicing interviews."
       />
       <ResumeReviewForm
         initialSkills={resumeSkills}

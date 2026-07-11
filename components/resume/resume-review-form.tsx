@@ -47,7 +47,7 @@ export function ResumeReviewForm({ initialSkills, initialProjects }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Save failed");
 
-      router.push("/onboarding/enrich");
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -174,7 +174,7 @@ export function ResumeReviewForm({ initialSkills, initialProjects }: Props) {
             Saving...
           </>
         ) : (
-          "Continue to project enrichment"
+          "Finish setup"
         )}
       </Button>
     </form>

@@ -6,7 +6,7 @@ export default function UploadPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title="Upload your resume"
-        description="Step 1 of 3 — AI extracts skills and projects to power your interviews."
+        description="Step 1 of 2 — AI extracts skills and projects to power your interviews."
       />
       <ResumeUploadForm />
     </div>
